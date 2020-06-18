@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class PostService {
 
-    private PostRepository postRepository;
+    private final PostRepository postRepository;
 
     @Autowired
     public PostService(PostRepository postRepository) {

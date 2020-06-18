@@ -20,6 +20,11 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
+
+
+    @Column(name="password")
+    private String password;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "author")
     private List<Post> posts;
 
@@ -55,10 +60,18 @@ public class User {
         this.lastName = lastName;
     }
 
-    public User(String nikName, String firstName, String lastName) {
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    public User(String nikName, String firstName, String lastName, String password) {
         this.nikName = nikName;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.password = password;
     }
 
     public User() {

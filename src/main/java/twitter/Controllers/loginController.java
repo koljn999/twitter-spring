@@ -1,27 +1,35 @@
 package twitter.Controllers;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.bind.annotation.*;
 import twitter.models.AuthenticationBean;
+import twitter.models.User;
+import twitter.service.PostService;
+import twitter.service.UserService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Base64;
 
 @CrossOrigin(origins = "http://localhost:4200")
-@SpringBootApplication
 @RestController
 public class loginController {
 
-    @GetMapping("/api/login")
-    public AuthenticationBean basicauth() {
+    private  UserService userService;
+    private User thisUser;
 
-        return new AuthenticationBean("You are authenticated");
+    public loginController(UserService userService) {
+
+        this.userService = userService;
     }
 
+    @RequestMapping("/api/login")
+    public Boolean login(@RequestBody User user) {
 
+         thisUser = userService.findByNikName(user.getNikName());
+
+         return thisUser.getNikName().equals(user.getNikName()) && thisUser.getPassword().equals(user.getPassword());
+    }
 
 }
+
