@@ -11,7 +11,7 @@ public class User {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "nik_name")
+    @Column(name = "nik_name")//login
     private String nikName;
 
     @Column(name = "first_name")
@@ -20,10 +20,19 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-
-
     @Column(name="password")
     private String password;
+
+    @Column(name="role")
+    private String role;
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "author")
     private List<Post> posts;

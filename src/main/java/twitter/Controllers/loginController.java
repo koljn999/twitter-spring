@@ -23,13 +23,7 @@ public class loginController {
         this.userService = userService;
     }
 
-    @RequestMapping("/api/login")
-    public Boolean login(@RequestBody User user) {
 
-         thisUser = userService.findByNikName(user.getNikName());
-
-         return thisUser.getNikName().equals(user.getNikName()) && thisUser.getPassword().equals(user.getPassword());
-    }
 
 }
 
