@@ -1,12 +1,17 @@
 package twitter.service;
 
 
-import twitter.models.Post;
-import twitter.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import twitter.reposetory.PostRepository;
+import twitter.models.Post;
+import twitter.models.UserTest;
+import twitter.repository.PostRepository;
+import twitter.repository.UserRepository;
+import twitter.util.CurrentUserHelper;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
@@ -14,35 +19,36 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public PostService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository=userRepository;
     }
 
-    public void blogPostAdd(User author, String content,  Date data) {
-        Post post = new Post(author, content, data);
-        postRepository.save(post);
+    public boolean addPostCurrentUser(Post post) {
+        post.setAuthor(userRepository.findUserByUsername(CurrentUserHelper.getCurrentUser()));
+        post.setDataPostsCreated(Instant.now());
+        if (postRepository.save(post) instanceof Post) return true;
+        else return false;
     }
 
-    public void blogPostDelete(long id){
-        Post post = postRepository.findById(id).orElseThrow();
+    public void deletePostCurrentUser(Post post){
         postRepository.delete(post);
     }
 
-    public void blogPostUpdate(long id, User author, String content,  Date data) {
-        Post post = postRepository.findById(id).orElseThrow();
-        post.setAuthor(author);
-        post.setContent(content);
-        post.setData(data);
-        postRepository.save(post);
+    public boolean updatePostCurrentUsers(Post post) {
+        if (postRepository.save(post) instanceof Post) return true;
+        else return false;
     }
 
-    public List<Post> findAll() {
-
-        return postRepository.findAll();
+    public List<Post> findAllPostsCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserTest user = userRepository.findUserByUsername(authentication.getName());
+        return user.getPosts();
     }
-
+//
 
 
 }

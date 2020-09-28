@@ -1,53 +1,110 @@
 package twitter.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import twitter.service.UserService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import twitter.service.AppUserDetailService;
 
+@Configuration
 @EnableWebSecurity
+// Modifying or overriding the default spring boot security.
 public class WebConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private UserService userDetailsService;
+    AppUserDetailService appUserDetailService;
 
-    @Autowired
-    CustomAuthencationProvider customAuthencationProvider;
+    //    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+//    }
+//
+//    @Bean
+//    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
+
+    // This method is for overriding the default AuthenticationManagerBuilder.
+    // We can specify how the user details are kept in the application. It may
+    // be in a database, LDAP or in memory.
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-
-        return NoOpPasswordEncoder.getInstance();
+    public NoOpPasswordEncoder noOpPasswordEncoder() {
+        return (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
     }
 
     @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService);
-        //  auth.authenticationProvider(customAuthencationProvider);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(appUserDetailService);
+
     }
+
+    // this configuration allow the client app to access the this api
+    // all the domain that consume this api must be included in the allowed o'rings
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurerAdapter() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**").allowedOrigins("http://localhost:4200");
+
+            }
+        };
+    }
+
+
+    // This method is for overriding some configuration of the WebSecurity
+    // If you want to ignore some request or request patterns then you can
+    // specify that inside this method
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        super.configure(web);
+    }
+
+    // This method is used for override HttpSecurity of the web Application.
+    // We can specify our authorization criteria inside this method.
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
-        http
+        http.cors().and()
+                // starts authorizing configurations
                 .authorizeRequests()
-                .antMatchers( "/api/posts").hasRole("ADMIN")
-                .and().formLogin().loginPage("/api/login").permitAll()
-                .and().logout().permitAll();
+                // ignoring the guest's urls "
+                .antMatchers("/account/register","/account/login","/logout").permitAll()
+                // authenticate all remaining URLS
+                .anyRequest().fullyAuthenticated().and()
+                /* "/logout" will log the user out by invalidating the HTTP Session,
+                 * cleaning up any {link rememberMe()} authentication that was configured, */
+                .logout()
+                .permitAll()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))
+                .and()
+                // enabling the basic authentication
+                .httpBasic().and()
+                // configuring the session on the server
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED).and()
+                // disabling the CSRF - Cross Site Request Forgery
+                .csrf().disable();
     }
 }
 

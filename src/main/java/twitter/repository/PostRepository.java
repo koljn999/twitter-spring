@@ -1,4 +1,4 @@
-package twitter.reposetory;
+package twitter.repository;
 
 import twitter.models.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
