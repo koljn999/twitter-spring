@@ -34,12 +34,8 @@ public class PostService {
         Post post = postRepository.findById(id).orElseThrow();
         post.setAuthor(author);
         post.setContent(content);
+        post.setData(data);
         postRepository.save(post);
-    }
-
-    public List<Post> findAll() {
-
-        return postRepository.findAll();
     }
 
 
