@@ -36,6 +36,9 @@ public class PostService {
         post.setContent(content);
         post.setData(data);
         postRepository.save(post);
+        //changes1
+        //changes2
+        //changes3
     }
 
     public List<Post> findAll() {
