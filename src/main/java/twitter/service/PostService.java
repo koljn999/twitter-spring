@@ -34,7 +34,6 @@ public class PostService {
         Post post = postRepository.findById(id).orElseThrow();
         post.setAuthor(author);
         post.setContent(content);
-        post.setData(data);
         postRepository.save(post);
     }
 
