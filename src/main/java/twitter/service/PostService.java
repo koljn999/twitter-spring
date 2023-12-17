@@ -38,6 +38,11 @@ public class PostService {
         postRepository.save(post);
     }
 
+    public List<Post> findAll() {
+
+        return postRepository.findAll();
+    }
+
 
 
 }
